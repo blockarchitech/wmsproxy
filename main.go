@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // WMS_SERVER_URL is the base URL for the NOAA WMS service.
@@ -51,6 +52,11 @@ func tileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if zoom > 22 {
+	    http.Error(w, "Invalid zoom level.", http.StatusBadRequest)
+	    return
+	}
+
 	minX, minY, maxX, maxY := tileToBoundingBox(x, y, zoom)
 	bbox := fmt.Sprintf("%f,%f,%f,%f", minX, minY, maxX, maxY)
 
@@ -70,7 +76,11 @@ func tileHandler(w http.ResponseWriter, r *http.Request) {
 	wmsURL := fmt.Sprintf("%s?%s", WMS_SERVER_URL, params.Encode())
 	log.Printf("Proxying request for tile z=%d, x=%d, y=%d to WMS URL: %s", zoom, x, y, wmsURL)
 
-	resp, err := http.Get(wmsURL)
+	var client = &http.Client{
+		Timeout: 10 * time.Second, // 10-second timeout
+	}
+
+	resp, err := client.Get(wmsURL)
 	if err != nil {
 		http.Error(w, "Failed to fetch tile from WMS server", http.StatusInternalServerError)
 		log.Printf("Error fetching from WMS: %v", err)
