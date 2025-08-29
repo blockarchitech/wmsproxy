@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"image"
 	"image/draw"
-	_ "image/png" // Import for decoding PNGs
-	"image/png"   // Import for encoding PNGs
+	"image/png"
+	_ "image/png"
 	"io"
 	"log"
 	"math"
